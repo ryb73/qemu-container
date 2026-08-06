@@ -12,7 +12,7 @@ for f in "$FIRMWARE" efivars.fd debian-12-genericcloud-arm64.qcow2 cloud-init.is
   fi
 done
 
-exec qemu-system-aarch64 \
+qemu-system-aarch64 \
   -M virt,accel=hvf \
   -cpu host \
   -smp 2 \
@@ -21,6 +21,14 @@ exec qemu-system-aarch64 \
   -drive if=pflash,format=raw,file=efivars.fd \
   -drive file=debian-12-genericcloud-arm64.qcow2,if=virtio,format=qcow2 \
   -drive file=cloud-init.iso,if=virtio,media=cdrom \
-  -nographic \
+  -display none \
+  -serial file:vm.log \
+  -daemonize \
+  -pidfile qemu.pid \
+  -monitor unix:monitor.sock,server,nowait \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0
+
+# -daemonize blocks until QEMU is fully initialized, so the PID file is ready
+# immediately after the command returns. set -euo pipefail handles startup failures.
+echo "VM started (PID $(cat qemu.pid)). SSH with: ssh -p 2222 debian@localhost"
