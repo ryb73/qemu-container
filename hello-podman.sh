@@ -1,15 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-SSH_TARGET="debian@localhost"
-SSH_PORT=2222
+source "$(dirname "${BASH_SOURCE[0]}")/vm.env"
 
 echo "==> Building hello image"
-ssh -p "${SSH_PORT}" "${SSH_TARGET}" \
+ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" \
   'podman build -t hello https://github.com/containers/PodmanHello.git'
 
 echo "==> Running hello image"
-ssh -t -p "${SSH_PORT}" "${SSH_TARGET}" \
+ssh -t "${SSH_OPTS[@]}" "${SSH_TARGET}" \
   'podman run --rm -it \
     --network=none \
     --cap-drop=all \

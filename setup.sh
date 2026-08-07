@@ -65,8 +65,15 @@ if [[ "${NEEDS_PROVISIONING_BOOT}" == "true" ]]; then
   # in effect by the time start.sh is used for real, so podman sees a
   # proper active session instead of hitting Polkit's "Interactive
   # authentication required" on an SSH session it won't auto-approve.
+  # A fresh disk means a freshly generated SSH host key, so any known_hosts
+  # entry from a previous VM is now stale. Clearing it lets start.sh's
+  # accept-new connections below record the new key without a conflict.
+  source "$(dirname "${BASH_SOURCE[0]}")/vm.env"
+  rm -f "${KNOWN_HOSTS_FILE}"
+
   echo "==> Booting once to run cloud-init provisioning"
   ./start.sh
+
   echo "==> Shutting down after provisioning boot"
   ./stop.sh
 fi

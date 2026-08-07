@@ -3,3 +3,4 @@
 *.fd
 *.pid
 *.log
+ssh_known_hosts

@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-SSH_TARGET="debian@localhost"
-SSH_PORT=2222
+source "$(dirname "${BASH_SOURCE[0]}")/vm.env"
+
 IMAGE="ghcr.io/openhands/agent-canvas:1.10.0"
 # Image runs as openhands (uid/gid 10001); rootless podman remaps our host
 # uid to root inside the container's user namespace, so bind mounts must be
@@ -12,17 +12,17 @@ CONTAINER_GID=10001
 READY_TIMEOUT=60
 
 echo "==> Preparing persistent directories"
-ssh -p "${SSH_PORT}" "${SSH_TARGET}" \
+ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" \
   "mkdir -p ~/.openhands ~/projects
    podman unshare chown -R ${CONTAINER_UID}:${CONTAINER_GID} ~/.openhands ~/projects"
 
 echo "==> Pulling Agent Canvas image"
-ssh -p "${SSH_PORT}" "${SSH_TARGET}" "podman pull ${IMAGE}"
+ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "podman pull ${IMAGE}"
 
 echo "==> Starting Agent Canvas"
 # Not using `podman run --rm`: on a crash it would delete the container
 # before the diagnostics below can `podman logs` it.
-ssh -p "${SSH_PORT}" "${SSH_TARGET}" \
+ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" \
   "podman rm -f agent-canvas >/dev/null 2>&1 || true
    podman run -d --name agent-canvas \
      -p 8000:8000 \
@@ -32,15 +32,15 @@ ssh -p "${SSH_PORT}" "${SSH_TARGET}" \
 
 echo "==> Waiting for Agent Canvas to become ready"
 SECONDS=0
-until ssh -p "${SSH_PORT}" "${SSH_TARGET}" 'curl -sf -o /dev/null http://localhost:8000/health' 2>/dev/null; do
-  if ! ssh -p "${SSH_PORT}" "${SSH_TARGET}" 'podman inspect -f "{{.State.Running}}" agent-canvas' 2>/dev/null | grep -q true; then
+until ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" 'curl -sf -o /dev/null http://localhost:8000/health' 2>/dev/null; do
+  if ! ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" 'podman inspect -f "{{.State.Running}}" agent-canvas' 2>/dev/null | grep -q true; then
     echo "Error: agent-canvas container exited unexpectedly. Recent logs:" >&2
-    ssh -p "${SSH_PORT}" "${SSH_TARGET}" 'podman logs --tail 50 agent-canvas' >&2
+    ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" 'podman logs --tail 50 agent-canvas' >&2
     exit 1
   fi
   if (( SECONDS >= READY_TIMEOUT )); then
     echo "Error: timed out after ${READY_TIMEOUT}s waiting for Agent Canvas to become ready. Recent logs:" >&2
-    ssh -p "${SSH_PORT}" "${SSH_TARGET}" 'podman logs --tail 50 agent-canvas' >&2
+    ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" 'podman logs --tail 50 agent-canvas' >&2
     exit 1
   fi
   sleep 1
