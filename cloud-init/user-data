@@ -8,6 +8,7 @@ users:
 
 package_update: true
 packages:
+  - git
   - podman
   # newuidmap/newgidmap: setuid helpers podman needs to map the debian
   # user's subuid/subgid range into each container's user namespace.

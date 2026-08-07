@@ -25,6 +25,7 @@ fi
 
 echo "==> Downloading Debian 12 ARM64 cloud image"
 if [ ! -f "$DEBIAN_IMAGE" ]; then
+  # TODO: cache in .images or something
   curl -L --progress-bar -o "$DEBIAN_IMAGE" "$DEBIAN_URL"
 else
   echo "    Already exists, skipping download"
@@ -42,6 +43,4 @@ rm -rf "$CIDATA_TMP"
 
 echo ""
 echo "Done. Boot with: ./start.sh"
-echo "SSH with:        ssh -p 2222 -o StrictHostKeyChecking=no debian@localhost"
-echo ""
-echo "First boot takes ~2-3 min while cloud-init installs packages."
+echo "start.sh waits for cloud-init to finish installing packages (~2-3 min on first boot) before returning."

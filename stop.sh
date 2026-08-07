@@ -33,7 +33,7 @@ fi
 
 echo "Waiting for VM to shut down..."
 trap 'echo "Interrupted. Cleaning up..."; rm -f qemu.pid monitor.sock; echo "Done."; exit 130' INT
-for i in $(seq 1 60); do
+for _ in $(seq 1 60); do
   qemu_running "$PID" || break
   sleep 0.5 || true
 done

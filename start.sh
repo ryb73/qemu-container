@@ -29,6 +29,27 @@ qemu-system-aarch64 \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0
 
+SSH_TARGET="debian@localhost"
+SSH_PORT=2222
+SSH_OPTS=(-p "$SSH_PORT" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+
 # -daemonize blocks until QEMU is fully initialized, so the PID file is ready
 # immediately after the command returns. set -euo pipefail handles startup failures.
-echo "VM started (PID $(cat qemu.pid)). SSH with: ssh -p 2222 debian@localhost"
+echo "VM started (PID $(cat qemu.pid))"
+
+SSH_WAIT_TIMEOUT=60
+
+echo "==> Waiting for SSH"
+SECONDS=0
+until ssh "${SSH_OPTS[@]}" -o BatchMode=yes -o ConnectTimeout=1 -o LogLevel=ERROR "$SSH_TARGET" true 2>/dev/null; do
+  if (( SECONDS >= SSH_WAIT_TIMEOUT )); then
+    echo "Error: timed out after ${SSH_WAIT_TIMEOUT}s waiting for SSH. Check vm.log." >&2
+    exit 1
+  fi
+  sleep 0.25
+done
+
+echo "==> Waiting for cloud-init to finish (installing podman, etc.)"
+ssh "${SSH_OPTS[@]}" -o ConnectTimeout=5 "$SSH_TARGET" 'cloud-init status --wait'
+
+echo "VM ready. SSH with: ssh -p ${SSH_PORT} ${SSH_TARGET}"
