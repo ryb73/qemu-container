@@ -6,3 +6,28 @@ users:
     ssh_authorized_keys:
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIItCfi4EwsQNV8QiwZ6AoMIBc4bvHyetZhMtxhI7xAda rpbiwer@gmail.com
 
+package_update: true
+packages:
+  - podman
+  # newuidmap/newgidmap: setuid helpers podman needs to map the debian
+  # user's subuid/subgid range into each container's user namespace.
+  - uidmap
+  # user-mode network stack for rootless containers (no CAP_NET_ADMIN
+  # available to set up a network namespace directly as a non-root user).
+  - slirp4netns
+  # overlay storage driver implemented in userspace; rootless podman can't
+  # use the kernel overlay driver directly since mounting it needs root.
+  - fuse-overlayfs
+  # gives the debian user's systemd session a session/user D-Bus, which
+  # podman's systemd cgroup driver needs when running rootless.
+  - dbus-user-session
+
+runcmd:
+  # cloud-init creates the debian user via useradd, which (unlike adduser)
+  # does not auto-allocate a subuid/subgid range. Rootless podman needs one
+  # to map container UIDs/GIDs to unprivileged host UIDs/GIDs.
+  - usermod --add-subuids 100000-165535 --add-subgids 100000-165535 debian
+  # keeps the debian user's systemd session (and anything podman starts
+  # under it) alive without requiring an active login session.
+  - loginctl enable-linger debian
+
