@@ -26,9 +26,17 @@ if [[ ! -f efivars.fd ]]; then
 fi
 
 echo "==> Downloading Debian 12 ARM64 cloud image"
+CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/qemu-vm-images"
+CACHED_IMAGE="${CACHE_DIR}/${DEBIAN_IMAGE}"
 if [[ ! -f "${DEBIAN_IMAGE}" ]]; then
-  # TODO: cache in .images or something
-  curl -L --progress-bar -o "${DEBIAN_IMAGE}" "${DEBIAN_URL}"
+  if [[ ! -f "${CACHED_IMAGE}" ]]; then
+    mkdir -p "${CACHE_DIR}"
+    curl -L --progress-bar -o "${CACHED_IMAGE}.tmp" "${DEBIAN_URL}"
+    mv "${CACHED_IMAGE}.tmp" "${CACHED_IMAGE}"
+  else
+    echo "    Using cached image at ${CACHED_IMAGE}"
+  fi
+  cp "${CACHED_IMAGE}" "${DEBIAN_IMAGE}"
 else
   echo "    Already exists, skipping download"
 fi
