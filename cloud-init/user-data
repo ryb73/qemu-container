@@ -23,6 +23,12 @@ packages:
   # podman's systemd cgroup driver needs when running rootless.
   - dbus-user-session
 
+write_files:
+  - path: /usr/share/containers/storage.conf
+    content: |
+      [storage]
+      driver = "overlay"
+
 runcmd:
   # cloud-init creates the debian user via useradd, which (unlike adduser)
   # does not auto-allocate a subuid/subgid range. Rootless podman needs one

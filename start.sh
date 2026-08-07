@@ -28,7 +28,7 @@ qemu-system-aarch64 \
   -daemonize \
   -pidfile qemu.pid \
   -monitor unix:monitor.sock,server,nowait \
-  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+  -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8000-:8000 \
   -device virtio-net-pci,netdev=net0
 
 SSH_TARGET="debian@localhost"
