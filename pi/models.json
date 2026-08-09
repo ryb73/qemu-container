@@ -1,0 +1,20 @@
+{
+  "providers": {
+    "nscale": {
+      "baseUrl": "https://inference.api.nscale.com/v1",
+      "api": "openai-completions",
+      "apiKey": "$NSCALE_API_KEY",
+      "models": [
+        {
+          "id": "moonshotai/Kimi-K2.5",
+          "name": "Kimi K2.5 (nscale)",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": { "input": 0.45, "output": 2.20, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 262144,
+          "maxTokens": 262144
+        }
+      ]
+    }
+  }
+}

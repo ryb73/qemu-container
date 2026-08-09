@@ -5,4 +5,6 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 
+COPY models.json /root/.pi/agent/models.json
+
 WORKDIR /workspace
